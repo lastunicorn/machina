@@ -1,5 +1,7 @@
 # Machina
 
+[![GitHub Repo](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/lastunicorn/machina) [![GitHub Build](https://img.shields.io/github/actions/workflow/status/lastunicorn/machina/build-master.yml?logo=github)](https://github.com/lastunicorn/machina/actions/workflows/build-master.yml) [![NuGet Version](https://img.shields.io/nuget/v/DustInTheWind.Machina.Toolkit?logo=nuget)](https://www.nuget.org/packages/DustInTheWind.Machina.Toolkit) [![NuGet Downloads](https://img.shields.io/nuget/dt/DustInTheWind.Machina.Toolkit?logo=nuget)](https://www.nuget.org/packages/DustInTheWind.Machina.Toolkit)
+
 A lightweight .NET library for building and running state machines.
 
 ## Installation
