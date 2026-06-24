@@ -3,4 +3,4 @@ Machina
 
 v1.0.0
 --------------------------------------------------------------------------------
-[new   ] Added the Statemachine class.
+[new   ] Added the StateMachine class.
