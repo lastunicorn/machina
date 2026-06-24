@@ -103,7 +103,7 @@ jobs:
           expected_version="${{ steps.version.outputs.package_version }}"
           ls ./artifacts/*.nupkg | grep -E "\.${expected_version//./\\.}\.nupkg$" >/dev/null
 
-      - name: Push to NuGet.orgMintos.Toolkit
+      - name: Push to NuGet.org
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
