@@ -1,0 +1,117 @@
+name: Publish NuGet package
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      package_version:
+        description: "Stable package version (required for manual runs)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-nuget:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore (nuget.org only)
+        run: dotnet restore ./Machina.slnx --configfile ./nuget.config
+
+      - name: Resolve package version
+        id: version
+        shell: bash
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PACKAGE_VERSION: ${{ github.event.inputs.package_version }}
+        run: |
+          stable_tag_pattern='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          stable_version_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+
+          if [ "$EVENT_NAME" = "push" ]; then
+            if ! [[ "$REF_NAME" =~ $stable_tag_pattern ]]; then
+              echo "Expected strict stable tag format vMAJOR.MINOR.PATCH, got '$REF_NAME'."
+              exit 1
+            fi
+            version="${REF_NAME#v}"
+          else
+            version="$INPUT_PACKAGE_VERSION"
+          fi
+
+          if [ -z "$version" ]; then
+            echo "No package version resolved. Use a vMAJOR.MINOR.PATCH tag or set workflow input 'package_version'."
+            exit 1
+          fi
+
+          if ! [[ "$version" =~ $stable_version_pattern ]]; then
+            echo "Invalid version '$version'. Only stable MAJOR.MINOR.PATCH is allowed."
+            exit 1
+          fi
+
+          echo "package_version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          dotnet build ./Machina.slnx -c Release --no-restore \
+            -p:ContinuousIntegrationBuild=true \
+            -p:Version="${{ steps.version.outputs.package_version }}" \
+            -p:PackageVersion="${{ steps.version.outputs.package_version }}" \
+            -p:AssemblyVersion="${{ steps.version.outputs.package_version }}" \
+            -p:FileVersion="${{ steps.version.outputs.package_version }}" \
+            -p:InformationalVersion="${{ steps.version.outputs.package_version }}" \
+            -p:IncludeSourceRevisionInInformationalVersion=false
+
+      - name: Pack
+        run: |
+          dotnet pack ./sources/Machina/Machina.csproj \
+            -c Release \
+            --no-build \
+            --include-symbols \
+            -o ./artifacts \
+            -p:SymbolPackageFormat=snupkg \
+            -p:Version="${{ steps.version.outputs.package_version }}" \
+            -p:PackageVersion="${{ steps.version.outputs.package_version }}" \
+            -p:AssemblyVersion="${{ steps.version.outputs.package_version }}" \
+            -p:FileVersion="${{ steps.version.outputs.package_version }}" \
+            -p:InformationalVersion="${{ steps.version.outputs.package_version }}" \
+            -p:IncludeSourceRevisionInInformationalVersion=false
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
+
+      - name: Validate packed version
+        shell: bash
+        run: |
+          expected_version="${{ steps.version.outputs.package_version }}"
+          ls ./artifacts/*.nupkg | grep -E "\.${expected_version//./\\.}\.nupkg$" >/dev/null
+
+      - name: Push to NuGet.orgMintos.Toolkit
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "./artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
+          dotnet nuget push "./artifacts/*.snupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
