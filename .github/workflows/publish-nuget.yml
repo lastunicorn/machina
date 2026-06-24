@@ -28,7 +28,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore (nuget.org only)
-        run: dotnet restore ./Machina.slnx --configfile ./nuget.config
+        run: dotnet restore ./Machina.slnx
 
       - name: Resolve package version
         id: version
@@ -76,7 +76,7 @@ jobs:
 
       - name: Pack
         run: |
-          dotnet pack ./sources/Machina/Machina.csproj \
+          dotnet pack ./Machina/Machina.csproj \
             -c Release \
             --no-build \
             --include-symbols \
