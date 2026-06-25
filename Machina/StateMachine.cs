@@ -11,6 +11,8 @@ public class StateMachine
 
 	public Type CurrentState { get; private set; }
 
+	public IStateFactory StateFactory { get; set; }
+
 	public event EventHandler<TransitioningEventArgs> Transitioning;
 
 	public event EventHandler<TransitionedEventArgs> Transitioned;
@@ -58,7 +60,8 @@ public class StateMachine
 		TransitioningEventArgs transitioningEventArgs = new(fromState);
 		OnTransitioning(transitioningEventArgs);
 
-		IState state = (IState)Activator.CreateInstance(fromState);
+		IStateFactory factory = StateFactory ?? new DefaultStateFactory();
+		IState state = (IState)factory.Create(fromState);
 		CurrentState = await state.ExecuteAsync();
 
 		TransitionedEventArgs transitionedEventArgs = new(fromState, CurrentState);
