@@ -2,6 +2,7 @@ namespace DustInTheWind.Machina;
 
 public class StateMachine<TStateId, TContext>
 	where TStateId : struct, Enum
+	where TContext : class
 {
 	private readonly Dictionary<TStateId, IState<TStateId, TContext>> statesById = new();
 	private TContext context;
@@ -60,6 +61,8 @@ public class StateMachine<TStateId, TContext>
 
 	public async Task RunAsync(TContext context)
 	{
+		ArgumentNullException.ThrowIfNull(context);
+
 		Start(context);
 
 		while (CurrentStateId != null)
