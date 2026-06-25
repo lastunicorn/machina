@@ -1,6 +1,6 @@
 namespace DustInTheWind.Machina;
 
-internal sealed class DelegateStateExecution<TStateId, TContext> : IStateExecution<TStateId, TContext>
+internal sealed class DelegateStateExecution<TStateId, TContext> : IState<TStateId, TContext>
     where TStateId : struct, Enum
 {
     private readonly Func<TContext, Task<TStateId?>> execute;

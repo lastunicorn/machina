@@ -1,6 +1,17 @@
 Machina
 ================================================================================
 
+v2.0.0
+--------------------------------------------------------------------------------
+[new   ] Added a context-free variant of the StateMachine class.
+[change] Replaced the IState interface with the IStateExecution<TStateId, in TContext>
+         interface. (breaking change)
+[new   ] Added suport for lambda states.
+[new   ] Added the StateResult helper.
+[new   ] Added Transitioning and Transitioned events.
+[change] Multiple renames (Ex: Renamed ExecuteAllAsync method to RunAsync)
+
+
 v1.0.0
 --------------------------------------------------------------------------------
 [new   ] Added the StateMachine class.
