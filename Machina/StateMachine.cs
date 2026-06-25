@@ -24,6 +24,14 @@ public class StateMachine<TStateId, TContext>
 		return this;
 	}
 
+	public StateMachine<TStateId, TContext> AddState(TStateId key, Func<TContext, TStateId?> execution)
+	{
+		ArgumentNullException.ThrowIfNull(execution);
+		DelegateStateExecution<TStateId, TContext> delegateStateExecution = new(ctx => Task.FromResult(execution(ctx)));
+		AddStateInternal(key, delegateStateExecution);
+		return this;
+	}
+
 	private void AddStateInternal(TStateId key, IStateExecution<TStateId, TContext> execution)
 	{
 		bool isFirstState = statesById.Count == 0;
