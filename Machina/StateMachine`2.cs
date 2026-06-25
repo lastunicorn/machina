@@ -1,6 +1,5 @@
 namespace DustInTheWind.Machina;
 
-
 public class StateMachine<TStateId, TContext>
 	where TStateId : struct, Enum
 {
@@ -10,6 +9,15 @@ public class StateMachine<TStateId, TContext>
 	public TStateId? InitialStateId { get; set; }
 
 	public TStateId? CurrentStateId { get; private set; }
+
+	public StateMachine()
+	{
+	}
+
+	public StateMachine(TStateId initialStateId)
+	{
+		InitialStateId = initialStateId;
+	}
 
 	public event EventHandler<TransitioningEventArgs<TStateId>> Transitioning;
 
