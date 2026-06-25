@@ -17,6 +17,13 @@ public class StateMachine<TStateId, TContext>
 		return this;
 	}
 
+	public StateMachine<TStateId, TContext> AddState(TStateId key, Func<TContext, Task<TStateId?>> execution)
+	{
+		ArgumentNullException.ThrowIfNull(execution);
+		AddStateInternal(key, new DelegateStateExecution<TStateId, TContext>(execution));
+		return this;
+	}
+
 	private void AddStateInternal(TStateId key, IStateExecution<TStateId, TContext> execution)
 	{
 		bool isFirstState = statesById.Count == 0;
