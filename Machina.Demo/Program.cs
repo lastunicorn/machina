@@ -3,7 +3,7 @@ using DustInTheWind.Machina.Demo.States;
 namespace DustInTheWind.Machina.Demo;
 
 /// <summary>
-/// This demo shows how to use the <see cref="StateMachine{TStateId,TContext}"/> class to implement
+/// This demo shows how to use the <see cref="StateMachine{TContext}"/> class to implement
 /// a state machine that processes orders.
 /// It creates two orders, one prepaid and one unpaid, and processes them sequentially.
 /// </summary>
@@ -11,7 +11,7 @@ internal static class Program
 {
 	private static async Task Main(string[] args)
 	{
-		StateMachine<OrderState, OrderContext> machine = CreateStateMachine();
+		StateMachine<OrderContext> machine = CreateStateMachine();
 
 		// Create and process a prepaid order.
 		// The processing of the prepaid order is linear, going through a number of steps in sequence:
@@ -44,7 +44,6 @@ internal static class Program
 		// 3. Packaging
 		// 4. Shipping
 		// 5. Delivering
-		
 
 		OrderContext unpaidOrder = new()
 		{
@@ -60,9 +59,9 @@ internal static class Program
 		await ProcessOrder(machine, unpaidOrder);
 	}
 
-	private static StateMachine<OrderState, OrderContext> CreateStateMachine()
+	private static StateMachine<OrderContext> CreateStateMachine()
 	{
-		StateMachine<OrderState, OrderContext> machine = new(OrderState.Validating);
+		StateMachine<OrderContext> machine = new();
 
 		machine.Transitioned += (sender, e) =>
 		{
@@ -70,16 +69,16 @@ internal static class Program
 			Console.WriteLine("--------------------------------------------------");
 		};
 
-		machine.AddState(OrderState.Validating, new ValidatingState());
-		machine.AddState(OrderState.ChargingPayment, new ChargingPaymentState());
-		machine.AddState(OrderState.Packaging, new PackagingState());
-		machine.AddState(OrderState.Shipping, new ShippingState());
-		machine.AddState(OrderState.Delivering, new DeliveringState());
+		machine.AddState<ValidatingState>();
+		machine.AddState<ChargingPaymentState>();
+		machine.AddState<PackagingState>();
+		machine.AddState<ShippingState>();
+		machine.AddState<DeliveringState>();
 
 		return machine;
 	}
 
-	private static async Task ProcessOrder(StateMachine<OrderState, OrderContext> machine, OrderContext order)
+	private static async Task ProcessOrder(StateMachine<OrderContext> machine, OrderContext order)
 	{
 		Console.WriteLine("=== Order Processing Demo ===");
 		Console.WriteLine();

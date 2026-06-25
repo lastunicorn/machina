@@ -1,8 +1,8 @@
 namespace DustInTheWind.Machina.Demo.States;
 
-internal class ValidatingState : StateBase<OrderState, OrderContext>
+internal class ValidatingState : StateBase<OrderContext>
 {
-    public override Task<OrderState?> ExecuteAsync(OrderContext context)
+    public override Task<Type> ExecuteAsync(OrderContext context)
     {
         Console.WriteLine("[Validating] Checking order for customer: {0}", context.CustomerName);
 
@@ -17,10 +17,10 @@ internal class ValidatingState : StateBase<OrderState, OrderContext>
         if (context.IsPrepaid)
         {
             Console.WriteLine("[Validating] Payment already confirmed. Skipping payment step.");
-            return Next(OrderState.Packaging);
+            return Next<PackagingState>();
         }
 
         Console.WriteLine("[Validating] Payment pending. Proceeding to payment collection.");
-        return Next(OrderState.ChargingPayment);
+        return Next<ChargingPaymentState>();
     }
 }
