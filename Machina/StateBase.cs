@@ -1,18 +1,18 @@
 namespace DustInTheWind.Machina;
 
-public abstract class StateBase<TStateId, TContext> : IState<TStateId, TContext>
-	where TStateId : struct, Enum
-	where TContext : class
+public abstract class StateBase<TContext> : IState<TContext>
+    where TContext : class
 {
-	public abstract Task<TStateId?> ExecuteAsync(TContext context);
+    public abstract Task<Type> ExecuteAsync(TContext context);
 
-	protected Task<TStateId?> Next(TStateId nextState)
-	{
-		return StateResult.Next(nextState);
-	}
+    protected Task<Type> Next<TNext>()
+        where TNext : class, IState<TContext>
+    {
+        return StateResult.Next<TNext>();
+    }
 
-	protected Task<TStateId?> Stop()
-	{
-		return StateResult.Stop<TStateId>();
-	}
+    protected Task<Type> Stop()
+    {
+        return StateResult.Stop();
+    }
 }

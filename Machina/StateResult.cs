@@ -8,18 +8,17 @@ public static class StateResult
     /// <summary>
     /// Transitions to the specified next state.
     /// </summary>
-    public static Task<TStateId?> Next<TStateId>(TStateId next)
-        where TStateId : struct, Enum
+    public static Task<Type> Next<TNext>()
+        where TNext : class
     {
-        return Task.FromResult<TStateId?>(next);
+        return Task.FromResult(typeof(TNext));
     }
 
     /// <summary>
     /// Stops the state machine.
     /// </summary>
-    public static Task<TStateId?> Stop<TStateId>()
-        where TStateId : struct, Enum
+    public static Task<Type> Stop()
     {
-        return Task.FromResult<TStateId?>(null);
+        return Task.FromResult<Type>(null);
     }
 }

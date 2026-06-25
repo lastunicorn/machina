@@ -1,11 +1,10 @@
 namespace DustInTheWind.Machina;
 
 /// <summary>
-/// Context-free variant of <see cref="IState{TStateId,TContext}"/> for state machines with no shared data.
-/// Register instances via <see cref="StateMachine{TStateId}.AddState(TStateId,IState{TStateId})"/>.
+/// Encapsulates the behavior of a single state.
+/// Register via <see cref="StateMachine{TContext}.AddState{TState}"/>.
 /// </summary>
-public interface IState<TStateId>
-	where TStateId : struct, Enum
+public interface IState<in TContext>
 {
-	Task<TStateId?> ExecuteAsync();
+    Task<Type> ExecuteAsync(TContext context);
 }

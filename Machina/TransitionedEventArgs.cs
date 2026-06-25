@@ -1,22 +1,21 @@
 namespace DustInTheWind.Machina;
 
 /// <summary>
-/// Provides data for the <see cref="StateMachine{TStateId,TContext}.Transitioned"/> event.
+/// Provides data for the <see cref="StateMachine{TContext}.Transitioned"/> event.
 /// </summary>
-public class TransitionedEventArgs<TStateId> : EventArgs
-    where TStateId : struct, Enum
+public class TransitionedEventArgs : EventArgs
 {
     /// <summary>
-    /// The state that just finished executing.
+    /// The type of the state that just finished executing.
     /// </summary>
-    public TStateId From { get; }
+    public Type From { get; }
 
     /// <summary>
-    /// The state the machine is moving to, or <c>null</c> if the machine has stopped.
+    /// The type of the state the machine is moving to, or <c>null</c> if the machine has stopped.
     /// </summary>
-    public TStateId? To { get; }
+    public Type To { get; }
 
-    public TransitionedEventArgs(TStateId from, TStateId? to)
+    public TransitionedEventArgs(Type from, Type to)
     {
         From = from;
         To = to;

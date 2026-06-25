@@ -1,10 +1,11 @@
 namespace DustInTheWind.Machina;
 
-public class StateMachine<TContext>
-	where TContext : class
+/// <summary>
+/// Context-free variant of <see cref="StateMachine{TContext}"/> for state machines with no shared data.
+/// </summary>
+public class StateMachine
 {
 	private readonly HashSet<Type> states = [];
-	private TContext context;
 
 	public Type InitialState { get; set; }
 
@@ -14,8 +15,8 @@ public class StateMachine<TContext>
 
 	public event EventHandler<TransitionedEventArgs> Transitioned;
 
-	public StateMachine<TContext> AddState<TState>()
-		where TState : class, IState<TContext>
+	public StateMachine AddState<TState>()
+		where TState : class, IState
 	{
 		Type stateType = typeof(TState);
 		bool isFirstState = states.Count == 0;
@@ -31,19 +32,16 @@ public class StateMachine<TContext>
 		return this;
 	}
 
-	public async Task RunAsync(TContext context)
+	public async Task RunAsync()
 	{
-		ArgumentNullException.ThrowIfNull(context);
-
-		Start(context);
+		Start();
 
 		while (CurrentState != null)
 			await MoveNextAsync();
 	}
 
-	public void Start(TContext context)
+	public void Start()
 	{
-		this.context = context ?? throw new ArgumentNullException(nameof(context));
 		CurrentState = InitialState;
 	}
 
@@ -60,8 +58,8 @@ public class StateMachine<TContext>
 		TransitioningEventArgs transitioningEventArgs = new(fromState);
 		OnTransitioning(transitioningEventArgs);
 
-		IState<TContext> state = (IState<TContext>)Activator.CreateInstance(fromState);
-		CurrentState = await state.ExecuteAsync(context);
+		IState state = (IState)Activator.CreateInstance(fromState);
+		CurrentState = await state.ExecuteAsync();
 
 		TransitionedEventArgs transitionedEventArgs = new(fromState, CurrentState);
 		OnTransitioned(transitionedEventArgs);
