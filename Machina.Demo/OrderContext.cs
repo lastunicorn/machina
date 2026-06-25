@@ -7,6 +7,8 @@ internal class OrderContext
     public List<string> Items { get; init; }
     
     public string ShippingAddress { get; init; }
-    
+
+    public bool IsPrepaid { get; init; }
+
     public string TrackingNumber { get; set; }
 }

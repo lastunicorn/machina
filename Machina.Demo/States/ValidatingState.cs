@@ -13,7 +13,14 @@ internal class ValidatingState : IState<OrderState, OrderContext>
         }
 
         Console.WriteLine("[Validating] Order contains {0} item(s). Valid.", context.Items.Count);
-        
-        return StateResult.Next(OrderState.Packaging);
+
+        if (context.IsPrepaid)
+        {
+            Console.WriteLine("[Validating] Payment already confirmed. Skipping payment step.");
+            return StateResult.Next(OrderState.Packaging);
+        }
+
+        Console.WriteLine("[Validating] Payment pending. Proceeding to payment collection.");
+        return StateResult.Next(OrderState.ChargingPayment);
     }
 }
