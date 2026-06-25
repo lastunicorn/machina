@@ -1,59 +1,27 @@
 namespace DustInTheWind.Machina;
 
-public class StateMachine<TState, TContext>
-	where TState : struct, Enum
+public class StateMachine<TStateId, TContext>
+	where TStateId : struct, Enum
 {
-	private readonly Dictionary<TState, IStateExecutor<TState, TContext>> statesById = new();
+	private readonly Dictionary<TStateId, IStateExecution<TStateId, TContext>> statesById = new();
 	private TContext context;
 
-	public TState? InitialState { get; set; }
+	public TStateId? InitialState { get; set; }
 
-	public TState? CurrentState { get; private set; }
+	public TStateId? CurrentState { get; private set; }
 
-	public StateMachine()
+	public StateMachine<TStateId, TContext> AddState(TStateId key, IStateExecution<TStateId, TContext> execution)
 	{
-	}
-
-	public StateMachine(IEnumerable<IState<TState, TContext>> states)
-	{
-		ArgumentNullException.ThrowIfNull(states);
-
-		foreach (IState<TState, TContext> state in states)
-			AddState(state);
-	}
-
-	public StateMachine<TState, TContext> AddState(IState<TState, TContext> state)
-	{
-		ArgumentNullException.ThrowIfNull(state);
-		AddStateInternal(state.Id, state);
+		ArgumentNullException.ThrowIfNull(execution);
+		AddStateInternal(key, execution);
 		return this;
 	}
 
-	public StateMachine<TState, TContext> AddState(IEnumerable<IState<TState, TContext>> states)
-	{
-		ArgumentNullException.ThrowIfNull(states);
-
-		foreach (IState<TState, TContext> state in states)
-		{
-			ArgumentNullException.ThrowIfNull(state);
-			AddStateInternal(state.Id, state);
-		}
-
-		return this;
-	}
-
-	public StateMachine<TState, TContext> AddState(TState key, IStateExecutor<TState, TContext> executor)
-	{
-		ArgumentNullException.ThrowIfNull(executor);
-		AddStateInternal(key, executor);
-		return this;
-	}
-
-	private void AddStateInternal(TState key, IStateExecutor<TState, TContext> executor)
+	private void AddStateInternal(TStateId key, IStateExecution<TStateId, TContext> execution)
 	{
 		bool isFirstState = statesById.Count == 0;
 
-		bool success = statesById.TryAdd(key, executor);
+		bool success = statesById.TryAdd(key, execution);
 
 		if (!success)
 			throw new ArgumentException($"A state with id '{key}' is already registered.");
@@ -78,15 +46,16 @@ public class StateMachine<TState, TContext>
 
 	public async Task<bool> MoveNextAsync()
 	{
-		TState? currentState = CurrentState;
+		TStateId? currentState = CurrentState;
 
 		if (!currentState.HasValue)
 			return false;
 
-		if (!statesById.TryGetValue(currentState.Value, out IStateExecutor<TState, TContext> state))
+		bool stateFound = statesById.TryGetValue(currentState.Value, out IStateExecution<TStateId, TContext> stateExecution);
+		if (!stateFound)
 			throw new InvalidOperationException($"No state registered for '{currentState.Value}'.");
 
-		CurrentState = await state.ExecuteAsync(context);
+		CurrentState = await stateExecution.ExecuteAsync(context);
 
 		return true;
 	}
