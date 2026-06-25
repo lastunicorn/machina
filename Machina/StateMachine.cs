@@ -10,6 +10,10 @@ public class StateMachine<TStateId, TContext>
 
 	public TStateId? CurrentState { get; private set; }
 
+	public event EventHandler<TransitioningEventArgs<TStateId>> Transitioning;
+
+	public event EventHandler<TransitionedEventArgs<TStateId>> Transitioned;
+
 	public StateMachine<TStateId, TContext> AddState(TStateId key, IStateExecution<TStateId, TContext> execution)
 	{
 		ArgumentNullException.ThrowIfNull(execution);
@@ -61,17 +65,33 @@ public class StateMachine<TStateId, TContext>
 
 	public async Task<bool> MoveNextAsync()
 	{
-		TStateId? currentState = CurrentState;
+		TStateId? fromState = CurrentState;
 
-		if (!currentState.HasValue)
+		if (!fromState.HasValue)
 			return false;
 
-		bool stateFound = statesById.TryGetValue(currentState.Value, out IStateExecution<TStateId, TContext> stateExecution);
+		bool stateFound = statesById.TryGetValue(fromState.Value, out IStateExecution<TStateId, TContext> stateExecution);
 		if (!stateFound)
-			throw new InvalidOperationException($"No state registered for '{currentState.Value}'.");
+			throw new InvalidOperationException($"No state registered for '{fromState.Value}'.");
+
+		TransitioningEventArgs<TStateId> transitioningEventArgs = new(fromState.Value);
+		OnTransitioning(transitioningEventArgs);
 
 		CurrentState = await stateExecution.ExecuteAsync(context);
 
+		TransitionedEventArgs<TStateId> transitionedEventArgs = new(fromState.Value, CurrentState);
+		OnTransitioned(transitionedEventArgs);
+
 		return true;
+	}
+
+	protected virtual void OnTransitioning(TransitioningEventArgs<TStateId> e)
+	{
+		Transitioning?.Invoke(this, e);
+	}
+
+	protected virtual void OnTransitioned(TransitionedEventArgs<TStateId> e)
+	{
+		Transitioned?.Invoke(this, e);
 	}
 }
