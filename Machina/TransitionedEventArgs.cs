@@ -15,6 +15,11 @@ public class TransitionedEventArgs : EventArgs
     /// </summary>
     public Type To { get; }
 
+    /// <summary>
+    /// Initializes a new instance with the source and destination state types.
+    /// </summary>
+    /// <param name="from">The state type that just finished executing.</param>
+    /// <param name="to">The state type the machine is moving to, or <c>null</c> if the machine has stopped.</param>
     public TransitionedEventArgs(Type from, Type to)
     {
         From = from;

@@ -10,6 +10,10 @@ public class TransitioningEventArgs : EventArgs
     /// </summary>
     public Type From { get; }
 
+    /// <summary>
+    /// Initializes a new instance with the type of the state that is about to execute.
+    /// </summary>
+    /// <param name="from">The state type that is about to execute.</param>
     public TransitioningEventArgs(Type from)
     {
         From = from;
