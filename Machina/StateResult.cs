@@ -1,7 +1,7 @@
 namespace DustInTheWind.Machina;
 
 /// <summary>
-/// Factory methods for returning state transition results without verbose Task.FromResult boilerplate.
+/// Factory methods for returning state transition results without verbose <see cref="Task.FromResult"/> boilerplate.
 /// </summary>
 public static class StateResult
 {

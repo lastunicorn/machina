@@ -5,7 +5,7 @@ namespace DustInTheWind.Machina;
 /// </summary>
 public class StateMachine
 {
-	private readonly HashSet<Type> states = [];
+	private readonly HashSet<Type> stateTypes = [];
 
 	public Type InitialState { get; set; }
 
@@ -21,9 +21,9 @@ public class StateMachine
 		where TState : class, IState
 	{
 		Type stateType = typeof(TState);
-		bool isFirstState = states.Count == 0;
+		bool isFirstState = stateTypes.Count == 0;
 
-		bool added = states.Add(stateType);
+		bool added = stateTypes.Add(stateType);
 
 		if (!added)
 			throw new ArgumentException($"State '{stateType.Name}' is already registered.");
@@ -54,7 +54,7 @@ public class StateMachine
 		if (fromState == null)
 			return false;
 
-		if (!states.Contains(fromState))
+		if (!stateTypes.Contains(fromState))
 			throw new InvalidOperationException($"No state registered for '{fromState.Name}'.");
 
 		TransitioningEventArgs transitioningEventArgs = new(fromState);

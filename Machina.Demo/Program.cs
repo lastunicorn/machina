@@ -62,12 +62,7 @@ internal static class Program
 	private static StateMachine<OrderContext> CreateStateMachine()
 	{
 		StateMachine<OrderContext> machine = new();
-
-		machine.Transitioned += (sender, e) =>
-		{
-			// Write a horizontal line after each step.
-			Console.WriteLine("--------------------------------------------------");
-		};
+		machine.Transitioned += HandleMachineTransitioned;
 
 		machine.AddState<ValidatingState>();
 		machine.AddState<ChargingPaymentState>();
@@ -76,6 +71,12 @@ internal static class Program
 		machine.AddState<DeliveringState>();
 
 		return machine;
+	}
+
+	private static void HandleMachineTransitioned(object sender, TransitionedEventArgs e)
+	{
+		// Write a horizontal line after each step.
+		Console.WriteLine("--------------------------------------------------");
 	}
 
 	private static async Task ProcessOrder(StateMachine<OrderContext> machine, OrderContext order)
