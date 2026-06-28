@@ -13,6 +13,49 @@ internal static class Program
 	{
 		StateMachine<OrderContext> machine = CreateStateMachine();
 
+		await DemoPrepaidOrder(machine);
+		Console.WriteLine();
+		await DemoUnpaidOrder(machine);
+	}
+
+	private static StateMachine<OrderContext> CreateStateMachine()
+	{
+		StateMachine<OrderContext> machine = new();
+		machine.Transitioned += HandleMachineTransitioned;
+		machine.Starting += HandleMachineStarting;
+		machine.Finished += HandleMachineFinished;
+
+		machine.AddState<ValidatingState>();
+		machine.AddState<ChargingPaymentState>();
+		machine.AddState<PackagingState>();
+		machine.AddState<ShippingState>();
+		machine.AddState<DeliveringState>();
+
+		return machine;
+	}
+
+	private static void HandleMachineStarting(object sender, EventArgs e)
+	{
+		Console.WriteLine("=== Order Processing Demo ===");
+		Console.WriteLine();
+	}
+
+	private static void HandleMachineFinished(object sender, EventArgs e)
+	{
+		Console.WriteLine();
+		Console.WriteLine("=== Done ===");
+	}
+
+	private static void HandleMachineTransitioned(object sender, TransitionedEventArgs e)
+	{
+		// Write a horizontal line after each step except the last one.
+		
+		if (e.To != null)
+			Console.WriteLine("--------------------------------------------------");
+	}
+
+	private static async Task DemoPrepaidOrder(StateMachine<OrderContext> machine)
+	{
 		// Create and process a prepaid order.
 		// The processing of the prepaid order is linear, going through a number of steps in sequence:
 		// 1. Validating
@@ -32,10 +75,12 @@ internal static class Program
 			ShippingAddress = "123 Main St, Springfield",
 			IsPrepaid = true
 		};
-		await ProcessOrder(machine, prepaidOrder);
+		
+		await machine.RunAsync(prepaidOrder);
+	}
 
-		Console.WriteLine();
-
+	private static async Task DemoUnpaidOrder(StateMachine<OrderContext> machine)
+	{
 		// Create and process an unpaid order.
 		// The processing of the unpaid order requires an additional step (the payment step) before
 		// packaging that the state machine is able to handle automatically:
@@ -56,37 +101,6 @@ internal static class Program
 			IsPrepaid = false
 		};
 
-		await ProcessOrder(machine, unpaidOrder);
-	}
-
-	private static StateMachine<OrderContext> CreateStateMachine()
-	{
-		StateMachine<OrderContext> machine = new();
-		machine.Transitioned += HandleMachineTransitioned;
-
-		machine.AddState<ValidatingState>();
-		machine.AddState<ChargingPaymentState>();
-		machine.AddState<PackagingState>();
-		machine.AddState<ShippingState>();
-		machine.AddState<DeliveringState>();
-
-		return machine;
-	}
-
-	private static void HandleMachineTransitioned(object sender, TransitionedEventArgs e)
-	{
-		// Write a horizontal line after each step.
-		Console.WriteLine("--------------------------------------------------");
-	}
-
-	private static async Task ProcessOrder(StateMachine<OrderContext> machine, OrderContext order)
-	{
-		Console.WriteLine("=== Order Processing Demo ===");
-		Console.WriteLine();
-
-		await machine.RunAsync(order);
-
-		Console.WriteLine();
-		Console.WriteLine("=== Done ===");
+		await machine.RunAsync(unpaidOrder);
 	}
 }

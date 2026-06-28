@@ -8,7 +8,7 @@ v2.0.0
          type.
 [new   ] Added the StateResult helper.
 [new   ] Added Transitioning and Transitioned events.
-[new   ] Added Starting and Finished events.
+[new   ] Added Starting, Started and Finished events.
 [change] Multiple renames (Ex: Renamed ExecuteAllAsync method to RunAsync)
 
 
