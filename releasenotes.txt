@@ -1,8 +1,3 @@
-Machina
-================================================================================
-
-v2.0.0
---------------------------------------------------------------------------------
 [new   ] Added a context-free variant of the StateMachine class.
 [change] Removed support for enum identifiers. Now a state is identified by its
          type.
@@ -10,8 +5,3 @@ v2.0.0
 [new   ] Added Transitioning and Transitioned events.
 [new   ] Added Starting and Finished events.
 [change] Multiple renames (Ex: Renamed ExecuteAllAsync method to RunAsync)
-
-
-v1.0.0
---------------------------------------------------------------------------------
-[new   ] Added the StateMachine class.
