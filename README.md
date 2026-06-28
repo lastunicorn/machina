@@ -10,21 +10,11 @@ A lightweight .NET library for building and running state machines.
 dotnet add package DustInTheWind.Machina
 ```
 
-## Usage
+## Quick Start
 
-### 1. Define the states as an enum
+### 1. Define a context
 
-```csharp
-public enum OrderStep
-{
-    Validate,
-    Reserve,
-    Charge,
-    Ship
-}
-```
-
-### 2. Define a context
+The context carries shared data through every state:
 
 ```csharp
 public class OrderContext
@@ -34,41 +24,44 @@ public class OrderContext
 }
 ```
 
-### 3. Implement a state
+### 2. Implement the states
 
-Each state returns the next `OrderStep` to transition to, or `null` to stop.
+Each state is a class. The state's own **type** acts as its identifier. Inherit from `StateBase<TContext>` for concise transition returns, or implement `IState<TContext>` directly. Return the type of the next state to transition to, or `null` to stop the machine.
 
 ```csharp
-public class ValidateState : IState<OrderStep, OrderContext>
+public class ValidateState : StateBase<OrderContext>
 {
-    public OrderStep Id => OrderStep.Validate;
-
-    public Task<OrderStep?> ExecuteAsync(OrderContext context)
+    public override Task<Type> ExecuteAsync(OrderContext context)
     {
         if (context.Order.Items.Count == 0)
-            return Task.FromResult<OrderStep?>(null); // stop — nothing to process
+            return Stop(); // signals the machine to stop
 
-        return Task.FromResult<OrderStep?>(OrderStep.Reserve);
+        return Next<ReserveState>();
     }
 }
 ```
 
-### 4. Run the state machine
+### 3. Run the state machine
+
+Register states with `AddState<T>()` and call `RunAsync` with the context:
 
 ```csharp
-StateMachine<OrderStep, OrderContext> machine = new(new IState<OrderStep, OrderContext>[]
-{
-    new ValidateState(),
-    new ReserveState(),
-    new ChargeState(),
-    new ShipState()
-});
+StateMachine<OrderContext> machine = new();
+machine.AddState<ValidateState>();
+machine.AddState<ReserveState>();
+machine.AddState<ChargeState>();
+machine.AddState<ShipState>();
 
-OrderContext context = new() { Order = order };
-await machine.ExecuteAllAsync(context);
+OrderContext context = new()
+{
+    Order = order
+};
+await machine.RunAsync(context);
 ```
 
-The machine starts at `Validate` (the first state added) and follows the transitions returned by each state until one returns `null`.
+The machine starts at the first registered state and follows the types returned by each state until one returns `null`.
+
+## Other Features
 
 ### Manual stepping
 
@@ -78,16 +71,35 @@ Use `Start` and `MoveNextAsync` to drive execution one step at a time:
 machine.Start(context);
 
 while (await machine.MoveNextAsync())
-{
-    Console.WriteLine($"Completed: {machine.CurrentState}");
-}
+    Console.WriteLine($"Completed: {machine.CurrentState?.Name}");
 ```
 
 ### Overriding the initial state
 
+By default the first state registered becomes the initial state. Override it by assigning a type:
+
 ```csharp
-machine.InitialState = OrderStep.Reserve;
+machine.InitialState = typeof(ReserveState);
 ```
+
+### Transition events
+
+Subscribe to `Transitioning` and `Transitioned` to observe every step:
+
+```csharp
+machine.Transitioning += (_, e) => Console.WriteLine($"Starting: {e.From.Name}");
+machine.Transitioned  += (_, e) => Console.WriteLine($"Done: {e.From.Name} → {e.To?.Name ?? "stopped"}");
+```
+
+### Custom state factory (DI integration)
+
+Assign `StateFactory` to control how state objects are created — useful for injecting dependencies:
+
+```csharp
+machine.StateFactory = new MyDiStateFactory(serviceProvider);
+```
+
+Implement `IStateFactory.Create(Type)` to return an instance from your container. The default factory uses `Activator.CreateInstance` and requires a public parameterless constructor on each state.
 
 ## License
 
