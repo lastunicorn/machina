@@ -39,6 +39,22 @@ public class StateMachine<TContext>
 	public IStateFactory StateFactory { get; set; }
 
 	/// <summary>
+	/// Raised when a new execution of the state machine is about to start, before the <see cref="CurrentState"/> is set to <see cref="InitialState"/>.
+	/// </summary>
+	public event EventHandler Starting;
+
+	/// <summary>
+	/// Raised when a new execution of the state machine has started.
+	/// </summary>
+	public event EventHandler Started;
+
+	/// <summary>
+	/// Raised after the last state has been executed, and <see cref="CurrentState"/> has transitioned to <c>null</c>,
+	/// indicating the machine has finished executing all states.
+	/// </summary>
+	public event EventHandler Finished;
+
+	/// <summary>
 	/// Raised before each state's <see cref="IState{TContext}.ExecuteAsync"/> is called.
 	/// </summary>
 	public event EventHandler<TransitioningEventArgs> Transitioning;
@@ -93,13 +109,17 @@ public class StateMachine<TContext>
 	/// Sets <see cref="CurrentState"/> to <see cref="InitialState"/> and stores
 	/// <paramref name="context"/> for subsequent <see cref="MoveNextAsync"/> calls,
 	/// without executing any states.
+	/// Raises <see cref="Starting"/> before and <see cref="Started"/> after the state is set.
 	/// </summary>
 	/// <param name="context">The shared context object passed to every state. Must not be <c>null</c>.</param>
 	/// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is <c>null</c>.</exception>
 	public void Start(TContext context)
 	{
 		this.context = context ?? throw new ArgumentNullException(nameof(context));
+		
+		OnStarting(EventArgs.Empty);
 		CurrentState = InitialState;
+		OnStarted(EventArgs.Empty);
 	}
 
 	/// <summary>
@@ -134,7 +154,37 @@ public class StateMachine<TContext>
 		TransitionedEventArgs transitionedEventArgs = new(fromState, CurrentState);
 		OnTransitioned(transitionedEventArgs);
 
+		if (CurrentState == null)
+			OnFinished(EventArgs.Empty);
+
 		return true;
+	}
+
+	/// <summary>
+	/// Raises the <see cref="Starting"/> event. Override in a subclass to add
+	/// behavior before the machine starts without subscribing to the event.
+	/// </summary>
+	protected virtual void OnStarting(EventArgs e)
+	{
+		Starting?.Invoke(this, e);
+	}
+
+	/// <summary>
+	/// Raises the <see cref="Started"/> event. Override in a subclass to add
+	/// behavior after the machine starts without subscribing to the event.
+	/// </summary>
+	protected virtual void OnStarted(EventArgs e)
+	{
+		Started?.Invoke(this, e);
+	}
+
+	/// <summary>
+	/// Raises the <see cref="Finished"/> event. Override in a subclass to add
+	/// behavior when the machine finishes without subscribing to the event.
+	/// </summary>
+	protected virtual void OnFinished(EventArgs e)
+	{
+		Finished?.Invoke(this, e);
 	}
 
 	/// <summary>

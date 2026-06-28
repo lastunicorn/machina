@@ -82,14 +82,17 @@ By default the first state registered becomes the initial state. Override it by 
 machine.InitialState = typeof(ReserveState);
 ```
 
-### Transition events
+### Events
 
-Subscribe to `Transitioning` and `Transitioned` to observe every step:
+The following events let you observe the machine's life cycle:
 
-```csharp
-machine.Transitioning += (_, e) => Console.WriteLine($"Starting: {e.From.Name}");
-machine.Transitioned  += (_, e) => Console.WriteLine($"Done: {e.From.Name} → {e.To?.Name ?? "stopped"}");
-```
+| Event | When it fires |
+|---|---|
+| `Starting` | When a new execution of the state machine is about to start, before `Start` sets `CurrentState` |
+| `Started` | After a new execution of the state machine has started, after `Start` sets `CurrentState` to `InitialState` |
+| `Transitioning` | Before the machine transitions to a new state, before the new state is executed |
+| `Transitioned` | After the machine transitioned to a new state |
+| `Finished` | After the last state was executed. The `CurrentState` is `null` (machine has stopped) |
 
 ### Custom state factory (DI integration)
 
