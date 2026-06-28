@@ -15,8 +15,10 @@ permissions:
   contents: read
 
 jobs:
-  publish-nuget:
+  build-and-pack:
     runs-on: ubuntu-latest
+    outputs:
+      package_version: ${{ steps.version.outputs.package_version }}
 
     steps:
       - name: Checkout
@@ -89,6 +91,12 @@ jobs:
             -p:InformationalVersion="${{ steps.version.outputs.package_version }}" \
             -p:IncludeSourceRevisionInInformationalVersion=false
 
+      - name: Validate packed version
+        shell: bash
+        run: |
+          expected_version="${{ steps.version.outputs.package_version }}"
+          ls ./artifacts/*.nupkg | grep -E "\.${expected_version//./\\.}\.nupkg$" >/dev/null
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -97,11 +105,21 @@ jobs:
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
 
-      - name: Validate packed version
-        shell: bash
-        run: |
-          expected_version="${{ steps.version.outputs.package_version }}"
-          ls ./artifacts/*.nupkg | grep -E "\.${expected_version//./\\.}\.nupkg$" >/dev/null
+  publish:
+    runs-on: ubuntu-latest
+    needs: build-and-pack
+
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: ./artifacts
 
       - name: Push to NuGet.org
         env:
